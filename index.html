@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校园媒体中心 · 招新</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0a1a;
+      --surface: rgba(255,255,255,.06);
+      --glass: rgba(255,255,255,.08);
+      --border: rgba(255,255,255,.12);
+      --text: #e8e8f0;
+      --text-dim: #9a9ab0;
+      --accent1: #a855f7;
+      --accent2: #06b6d4;
+      --accent3: #ec4899;
+      --glow1: 0 0 30px rgba(168,85,247,.35);
+      --glow2: 0 0 30px rgba(6,182,212,.35);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ===== Particle Canvas ===== */
+    #particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    /* ===== Nav ===== */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 3rem;
+      background: transparent;
+      transition: background .4s, box-shadow .4s, backdrop-filter .4s;
+    }
+    .nav.scrolled {
+      background: rgba(10,10,26,.85);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 1px 0 var(--border);
+    }
+    .nav-logo {
+      font-size: 1.3rem; font-weight: 700; letter-spacing: .04em;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      font-size: .9rem; color: var(--text-dim); transition: color .3s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      transition: width .3s;
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-links a:hover::after { width: 100%; }
+    .hamburger { display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; }
+
+    /* ===== Sections ===== */
+    section { position: relative; z-index: 1; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+    /* ===== Hero ===== */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 6rem 2rem 4rem;
+    }
+    .hero-inner { max-width: 800px; }
+    .hero-badge {
+      display: inline-block; padding: .4rem 1.2rem; border-radius: 999px;
+      background: var(--glass); border: 1px solid var(--border);
+      font-size: .8rem; color: var(--accent2); margin-bottom: 1.5rem;
+      backdrop-filter: blur(8px);
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 6vw, 4.5rem); font-weight: 800; line-height: 1.15;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(135deg, var(--accent1), var(--accent3), var(--accent2));
+      background-size: 200% 200%;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: gradShift 4s ease infinite;
+    }
+    @keyframes gradShift {
+      0%,100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    .hero p { font-size: 1.15rem; color: var(--text-dim); margin-bottom: 2.5rem; max-width: 600px; margin-inline: auto; }
+    .btn-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .85rem 2rem; border-radius: 12px; font-size: 1rem; font-weight: 600;
+      border: none; cursor: pointer; transition: transform .25s, box-shadow .25s;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent1), var(--accent3));
+      color: #fff; box-shadow: var(--glow1);
+    }
+    .btn-outline {
+      background: transparent; color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--accent2); box-shadow: var(--glow2); }
+
+    /* ===== Scroll Reveal ===== */
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ===== Stats ===== */
+    .stats { padding: 5rem 0; }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+    }
+    .stat-card {
+      text-align: center; padding: 2rem 1rem; border-radius: 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+    .stat-num {
+      font-size: 3rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stat-label { color: var(--text-dim); margin-top: .3rem; font-size: .95rem; }
+
+    /* ===== Section Titles ===== */
+    .section-title {
+      text-align: center; margin-bottom: 3.5rem;
+    }
+    .section-title h2 {
+      font-size: 2.2rem; font-weight: 700; margin-bottom: .6rem;
+    }
+    .section-title p { color: var(--text-dim); max-width: 500px; margin-inline: auto; }
+    .section-title .line {
+      width: 60px; height: 3px; margin: 1rem auto 0; border-radius: 2px;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+    }
+
+    /* ===== Departments ===== */
+    .departments { padding: 5rem 0; }
+    .dept-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .dept-card {
+      padding: 2rem; border-radius: 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      transition: transform .3s, box-shadow .3s, border-color .3s;
+      cursor: default;
+    }
+    .dept-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 40px rgba(0,0,0,.4);
+      border-color: var(--accent1);
+    }
+    .dept-icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 1.2rem;
+    }
+    .dept-card:nth-child(1) .dept-icon { background: rgba(168,85,247,.18); color: var(--accent1); }
+    .dept-card:nth-child(2) .dept-icon { background: rgba(6,182,212,.18); color: var(--accent2); }
+    .dept-card:nth-child(3) .dept-icon { background: rgba(236,72,153,.18); color: var(--accent3); }
+    .dept-card:nth-child(4) .dept-icon { background: rgba(245,158,11,.18); color: #f59e0b; }
+    .dept-card:nth-child(5) .dept-icon { background: rgba(34,197,94,.18); color: #22c55e; }
+    .dept-card:nth-child(6) .dept-icon { background: rgba(59,130,246,.18); color: #3b82f6; }
+    .dept-card h3 { font-size: 1.2rem; margin-bottom: .5rem; }
+    .dept-card p { color: var(--text-dim); font-size: .92rem; }
+
+    /* ===== Gallery ===== */
+    .gallery { padding: 5rem 0; }
+    .gallery-filters {
+      display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+    .filter-btn {
+      padding: .5rem 1.4rem; border-radius: 999px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-dim); cursor: pointer;
+      font-size: .88rem; transition: all .3s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color: #fff; border-color: transparent;
+    }
+    .gallery-grid {
+      columns: 3; column-gap: 1rem;
+    }
+    .gallery-item {
+      break-inside: avoid; margin-bottom: 1rem; border-radius: 12px; overflow: hidden;
+      position: relative; cursor: pointer;
+      transition: transform .3s, opacity .4s;
+    }
+    .gallery-item img {
+      width: 100%; display: block; transition: transform .4s;
+    }
+    .gallery-item:hover img { transform: scale(1.05); }
+    .gallery-item .overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.6), transparent);
+      opacity: 0; transition: opacity .3s;
+      display: flex; align-items: flex-end; padding: 1rem;
+    }
+    .gallery-item:hover .overlay { opacity: 1; }
+    .overlay span { font-size: .85rem; color: #fff; }
+
+    /* ===== Lightbox ===== */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.92);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .35s;
+    }
+    .lightbox.open { opacity: 1; pointer-events: auto; }
+    .lightbox img {
+      max-width: 90vw; max-height: 85vh; border-radius: 12px;
+      box-shadow: 0 0 60px rgba(0,0,0,.6);
+    }
+    .lightbox-close {
+      position: absolute; top: 1.5rem; right: 2rem;
+      background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer;
+      opacity: .7; transition: opacity .3s;
+    }
+    .lightbox-close:hover { opacity: 1; }
+    .lightbox-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: var(--glass); border: 1px solid var(--border);
+      color: #fff; width: 48px; height: 48px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.2rem; transition: background .3s;
+    }
+    .lightbox-nav:hover { background: var(--accent1); }
+    .lightbox-prev { left: 2rem; }
+    .lightbox-next { right: 2rem; }
+
+    /* ===== Form ===== */
+    .signup { padding: 5rem 0; }
+    .form-wrapper {
+      max-width: 640px; margin: 0 auto; padding: 3rem; border-radius: 20px;
+      background: var(--surface); border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block; font-size: .85rem; color: var(--text-dim); margin-bottom: .4rem;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: .75rem 1rem; border-radius: 10px;
+      background: rgba(255,255,255,.05); border: 1px solid var(--border);
+      color: var(--text); font-size: .95rem; outline: none;
+      transition: border-color .3s, box-shadow .3s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--accent1); box-shadow: 0 0 0 3px rgba(168,85,247,.15);
+    }
+    .form-group textarea { resize: vertical; min-height: 100px; }
+    .form-group select option { background: #1a1a2e; color: var(--text); }
+    .form-submit { text-align: center; margin-top: 1.5rem; }
+    .success-msg {
+      display: none; text-align: center; padding: 2rem;
+    }
+    .success-msg i { font-size: 3rem; color: #22c55e; margin-bottom: 1rem; }
+    .success-msg h3 { font-size: 1.3rem; margin-bottom: .5rem; }
+    .success-msg p { color: var(--text-dim); }
+
+    /* ===== Footer ===== */
+    .footer {
+      padding: 3rem 0; text-align: center;
+      border-top: 1px solid var(--border);
+      position: relative; z-index: 1;
+    }
+    .footer-social { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 1.2rem; }
+    .footer-social a {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-dim); font-size: 1.1rem;
+      transition: color .3s, border-color .3s, box-shadow .3s;
+    }
+    .footer-social a:hover {
+      color: #fff; border-color: var(--accent1); box-shadow: var(--glow1);
+    }
+    .footer p { color: var(--text-dim); font-size: .85rem; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .hamburger { display: block; }
+      .nav-links.open {
+        display: flex; flex-direction: column;
+        position: absolute; top: 100%; left: 0; right: 0;
+        background: rgba(10,10,26,.95); backdrop-filter: blur(16px);
+        padding: 1.5rem 2rem; gap: 1.2rem;
+      }
+      .hero h1 { font-size: 2rem; }
+      .gallery-grid { columns: 2; }
+      .form-row { grid-template-columns: 1fr; }
+      .form-wrapper { padding: 2rem 1.5rem; }
+      .lightbox-nav { width: 38px; height: 38px; font-size: 1rem; }
+      .lightbox-prev { left: 1rem; }
+      .lightbox-next { right: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .gallery-grid { columns: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- Nav -->
+<nav class="nav" id="nav">
+  <div class="nav-logo">🎬 校园媒体中心</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#stats">数据</a></li>
+    <li><a href="#departments">部门</a></li>
+    <li><a href="#gallery">作品</a></li>
+    <li><a href="#signup">报名</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="菜单"><i class="fa-solid fa-bars"></i></button>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-inner">
+    <span class="hero-badge reveal">📢 2026 秋季招新正式启动</span>
+    <h1 class="reveal">用镜头记录校园<br><span class="grad">用创意点亮青春</span></h1>
+    <p class="reveal">这里是校园媒体中心——一个汇聚摄影、视频、文案、设计的创作社区。加入我们，让每一份热爱都被看见。</p>
+    <div class="btn-group reveal">
+      <a href="#signup" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> 立即报名</a>
+      <a href="#gallery" class="btn btn-outline"><i class="fa-solid fa-images"></i> 浏览作品</a>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<section class="stats" id="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-card reveal">
+          <div class="stat-num" data-target="1200">0</div>
+          <div class="stat-label">注册成员</div>
+        </div>
+        <div class="stat-card reveal">
+          <div class="stat-num" data-target="365">0</div>
+          <div class="stat-label">发布作品</div>
+        </div>
+        <div class="stat-card reveal">
+          <div class="stat-num" data-target="6">0</div>
+          <div class="stat-label">核心部门</div>
+        </div>
+        <div class="stat-card reveal">
+          <div class="stat-num" data-target="50">0</div>
+          <div class="stat-label">校园活动</div>
+        </div>
+      </div>
+    </div>
+</section>
+
+<!-- Departments -->
+<section class="departments" id="departments">
+  <div class="container">
+    <div class="section-title reveal">
+      <h2>六大部门</h2>
+      <p>找到属于你的舞台，发挥你的独特才能</p>
+      <div class="line"></div>
+    </div>
+    <div class="dept-grid">
+      <div class="dept-card reveal">
+        <div class="dept-icon"><i class="fa-solid fa-camera"></i></div>
+        <h3>摄影部</h3>
+        <p>捕捉校园精彩瞬间，从新闻现场到艺术创作，用光影讲述故事。</p>
+      </div>
+      <div class="dept-card reveal">
+        <div class="dept-icon"><i class="fa-solid fa-video"></i></div>
+        <h3>视频部</h3>
+        <p>策划拍摄短视频、纪录片，掌握剪辑与特效，让动态影像发声。</p>
+      </div>
+      <div class="dept-card reveal">
+        <div class="dept-icon"><i class="fa-solid fa-pen-nib"></i></div>
+        <h3>文案部</h3>
+        <p>撰写新闻稿、专题报道、推文文案，以文字传递思想与温度。</p>
+      </div>
+      <div class="dept-card reveal">
+        <div class="dept-icon"><i class="fa-solid fa-palette"></i></div>
+        <h3>设计部</h3>
+        <p>海报、视觉识别、UI界面——用设计塑造校园媒体的品牌形象。</p>
+      </div>
+      <div class="dept-card reveal">
+        <div class="dept-icon"><i class="fa-solid fa-code"></i></div>
+        <h3>技术部</h3>
+        <p>网站开发、数据分析、工具搭建，为内容生产提供技术支撑。</p>
+      </div>
+      <div class="dept-card reveal">
+        <div class="dept-icon"><i class="fa-solid fa-bullhorn"></i></div>
+        <h3>运营部</h3>
+        <p>新媒体运营、活动策划、对外联络，让好内容触达更多人。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Gallery -->
+<section class="gallery" id="gallery">
+  <div class="container">
+    <div class="section-title reveal">
+      <h2>作品展示</h2>
+      <p>来自各部门成员的真实工作瞬间</p>
+      <div class="line"></div>
+    </div>
+    <div class="gallery-filters reveal">
+      <button class="filter-btn active" data-filter="all">全部</button>
+      <button class="filter-btn" data-filter="photo">摄影</button>
+      <button class="filter-btn" data-filter="video">视频</button>
+      <button class="filter-btn" data-filter="design">设计</button>
+      <button class="filter-btn" data-filter="event">活动</button>
+    </div>
+    <div class="gallery-grid" id="galleryGrid">
+      <!-- Items injected by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lbClose">&times;</button>
+  <button class="lightbox-nav lightbox-prev" id="lbPrev"><i class="fa-solid fa-chevron-left"></i></button>
+  <img src="" alt="" id="lbImg">
+  <button class="lightbox-nav lightbox-next" id="lbNext"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
+
+<!-- Signup Form -->
+<section class="signup" id="signup">
+  <div class="container">
+    <div class="section-title reveal">
+      <h2>加入我们</h2>
+      <p>填写以下信息，开启你的媒体之旅</p>
+      <div class="line"></div>
+    </div>
+    <div class="form-wrapper reveal">
+      <form id="signupForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">姓名 *</label>
+            <input type="text" id="name" required placeholder="你的名字">
+          </div>
+          <div class="form-group">
+            <label for="studentId">学号 *</label>
+            <input type="text" id="studentId" required placeholder="你的学号">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">邮箱 *</label>
+            <input type="email" id="email" required placeholder="your@email.com">
+          </div>
+          <div class="form-group">
+            <label for="phone">电话</label>
+            <input type="tel" id="phone" placeholder="手机号码">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="dept">意向部门 *</label>
+          <select id="dept" required>
+            <option value="">请选择部门</option>
+            <option value="photo">摄影部</option>
+            <option value="video">视频部</option>
+            <option value="copy">文案部</option>
+            <option value="design">设计部</option>
+            <option value="tech">技术部</option>
+            <option value="ops">运营部</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="message">个人简介 / 想说的话</label>
+          <textarea id="message" placeholder="介绍一下自己，或者说说你为什么想加入…"></textarea>
+        </div>
+        <div class="form-submit">
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+            <i class="fa-solid fa-paper-plane"></i> 提交报名
+          </button>
+        </div>
+      </form>
+      <div class="success-msg" id="successMsg">
+        <i class="fa-solid fa-circle-check"></i>
+        <h3>报名成功！</h3>
+        <p>我们会在3个工作日内联系你，请留意邮件或短信通知。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-social">
+      <a href="#" aria-label="微信"><i class="fa-brands fa-weixin"></i></a>
+      <a href="#" aria-label="微博"><i class="fa-brands fa-weibo"></i></a>
+      <a href="#" aria-label="Bilibili"><i class="fa-brands fa-bilibili"></i></a>
+      <a href="#" aria-label="抖音"><i class="fa-brands fa-tiktok"></i></a>
+      <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+    </div>
+    <p>&copy; 2026 校园媒体中心 · 让每一帧都有意义</p>
+  </div>
+</footer>
+
+<script>
+// ===== Particles =====
+(function() {
+  const c = document.getElementById('particles'), ctx = c.getContext('2d');
+  let w, h, pts = [];
+  function resize() { w = c.width = innerWidth; h = c.height = innerHeight; }
+  resize(); addEventListener('resize', resize);
+  class Pt {
+    constructor() { this.reset(); }
+    reset() {
+      this.x = Math.random() * w;
+      this.y = Math.random() * h;
+      this.r = Math.random() * 2 + .5;
+      this.vx = (Math.random() - .5) * .4;
+      this.vy = (Math.random() - .5) * .4;
+      this.alpha = Math.random() * .5 + .15;
+      const colors = ['168,85,247','6,182,212','236,72,153'];
+      this.color = colors[Math.floor(Math.random()*colors.length)];
+    }
+    update() {
+      this.x += this.vx; this.y += this.vy;
+      if (this.x < 0 || this.x > w) this.vx *= -1;
+      if (this.y < 0 || this.y > h) this.vy *= -1;
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(${this.color},${this.alpha})`;
+      ctx.fill();
+    }
+  }
+  for (let i = 0; i < 80; i++) pts.push(new Pt());
+  function loop() {
+    ctx.clearRect(0, 0, w, h);
+    pts.forEach(p => { p.update(); p.draw(); });
+    // draw connections
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i+1; j < pts.length; j++) {
+        const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[j].x, pts[j].y);
+          ctx.strokeStyle = `rgba(168,85,247,${.08*(1-dist/120)})`;
+          ctx.lineWidth = .5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+// ===== Nav scroll =====
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', scrollY > 60); });
+
+// ===== Hamburger =====
+const hamburger = document.getElementById('hamburger');
+const navLinks = document.getElementById('navLinks');
+hamburger.addEventListener('click', () => { navLinks.classList.toggle('open'); });
+navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+// ===== Scroll Reveal =====
+const reveals = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); }});
+}, { threshold: .15 });
+reveals.forEach(el => revealObs.observe(el));
+
+// ===== Counter Animation =====
+const statNums = document.querySelectorAll('.stat-num[data-target]');
+const counterObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target;
+    const target = +el.dataset.target;
+    const duration = 2000;
+    const start = performance.now();
+    function tick(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutExpo
+      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      el.textContent = Math.round(target * ease).toLocaleString();
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+    counterObs.unobserve(el);
+  });
+}, { threshold: .5 });
+statNums.forEach(el => counterObs.observe(el));
+
+// ===== Gallery Data & Render =====
+const galleryData = [
+  { src: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=600&q=80', cat: 'photo', label: '新闻摄影现场' },
+  { src: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=600&q=80', cat: 'video', label: '视频拍摄中' },
+  { src: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&q=80', cat: 'design', label: '海报设计工作室' },
+  { src: 'https://images.unsplash.com/photo-1505373877791-k54c4d78dcf8?w=600&q=80', cat: 'event', label: '校园大型活动' },
+  { src: 'https://images.unsplash.com/photo-1471341971476-ae15ff5dd4ea?w=600&q=80', cat: 'photo', label: '风光摄影练习' },
+  { src: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80', cat: 'event', label: '团队讨论会' },
+  { src: 'https://images.unsplash.com/photo-1535016120720-40c646be5580?w=600&q=80', cat: 'video', label: '后期剪辑室' },
+  { src: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&q=80', cat: 'design', label: 'UI 设计工作' },
+  { src: 'https://images.unsplash.com/photo-1492725764893-90b379c2b6e7?w=600&q=80', cat: 'photo', label: '人像摄影' },
+  { src: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&q=80', cat: 'event', label: '工作坊培训' },
+  { src: 'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=600&q=80', cat: 'video', label: '无人机航拍' },
+  { src: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=600&q=80', cat: 'design', label: '品牌视觉系统' },
+];
+
+const grid = document.getElementById('galleryGrid');
+let currentIndex = 0;
+let filteredData = [...galleryData];
+
+function renderGallery(filter) {
+  filteredData = filter === 'all' ? [...galleryData] : galleryData.filter(d => d.cat === filter);
+  grid.innerHTML = '';
+  filteredData.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'gallery-item';
+    div.dataset.index = i;
+    div.innerHTML = `<img src="${item.src}" alt="${item.label}"><div class="overlay"><span>${item.label}</span></div>`;
+    div.addEventListener('click', () => openLightbox(i));
+    grid.appendChild(div);
+  });
+}
+renderGallery('all');
+
+// Filters
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderGallery(btn.dataset.filter);
+  });
+});
+
+// ===== Lightbox =====
+const lb = document.getElementById('lightbox');
+const lbImg = document.getElementById('lbImg');
+
+function openLightbox(i) {
+  currentIndex = i;
+  lbImg.src = filteredData[i].src;
+  lbImg.alt = filteredData[i].label;
+  lb.classList.add('open');
+}
+function closeLightbox() { lb.classList.remove('open'); }
+document.getElementById('lbClose').addEventListener('click', closeLightbox);
+lb.addEventListener('click', (e) => { if (e.target === lb) closeLightbox(); });
+document.getElementById('lbPrev').addEventListener('click', (e) => {
+  e.stopPropagation();
+  currentIndex = (currentIndex - 1 + filteredData.length) % filteredData.length;
+  lbImg.src = filteredData[currentIndex].src;
+  lbImg.alt = filteredData[currentIndex].label;
+});
+document.getElementById('lbNext').addEventListener('click', (e) => {
+  e.stopPropagation();
+  currentIndex = (currentIndex + 1) % filteredData.length;
+  lbImg.src = filteredData[currentIndex].src;
+  lbImg.alt = filteredData[currentIndex].label;
+});
+document.addEventListener('keydown', (e) => {
+  if (!lb.classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') document.getElementById('lbPrev').click();
+  if (e.key === 'ArrowRight') document.getElementById('lbNext').click();
+});
+
+// ===== Form =====
+document.getElementById('signupForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  e.target.style.display = 'none';
+  document.getElementById('successMsg').style.display = 'block';
+});
+</script>
+</body>
+</html>
