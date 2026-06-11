@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>融媒视界 · 校融媒体招新 | 云端报名+后台表格</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Supabase JS 客户端 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Space Grotesk', sans-serif;
+            background-color: #050b17;
+            color: #eef5ff;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            display: block;
+            background: radial-gradient(circle at 20% 30%, #0a1120, #010101);
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            backdrop-filter: blur(16px);
+            background: rgba(5, 15, 30, 0.75);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            z-index: 100;
+            padding: 1rem 0;
+        }
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #aaffff, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #e2e8f0;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+        .nav-links a:hover {
+            color: #0ff;
+            text-shadow: 0 0 5px cyan;
+        }
+
+        .btn-primary {
+            background: linear-gradient(95deg, #0f2b3d, #0a6c8c);
+            border: 1px solid #0ff;
+            padding: 0.7rem 1.6rem;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background: #0b9bc0;
+            box-shadow: 0 0 15px cyan;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid cyan;
+            padding: 0.6rem 1.4rem;
+            border-radius: 30px;
+            color: cyan;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .hero {
+            padding: 5rem 0 4rem;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff, #3bc9db);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            color: #b9d0f0;
+        }
+        .hero-badge {
+            background: rgba(0, 255, 255, 0.15);
+            backdrop-filter: blur(4px);
+            display: inline-block;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            margin-bottom: 1.5rem;
+        }
+
+        .experience-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        .exp-card {
+            background: rgba(15, 25, 45, 0.65);
+            backdrop-filter: blur(8px);
+            border-radius: 32px;
+            padding: 1.8rem;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            transition: transform 0.3s;
+        }
+        .exp-card:hover {
+            transform: translateY(-8px);
+            border-color: cyan;
+        }
+        .exp-icon { font-size: 2.5rem; color: #0ff; margin-bottom: 1rem; }
+        .exp-card h3 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .exp-date { font-size: 0.8rem; color: #6ca9ff; display: block; margin-bottom: 1rem; }
+
+        .form-wrapper {
+            background: rgba(8, 18, 28, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 48px;
+            padding: 2.5rem;
+            margin: 3rem 0;
+            border: 1px solid rgba(0, 255, 255, 0.25);
+        }
+        .form-area { max-width: 550px; margin: 0 auto; }
+        .input-group { margin-bottom: 1.4rem; }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #2d4a6e;
+            border-radius: 28px;
+            color: white;
+            font-family: inherit;
+        }
+        .input-group input:focus, .input-group select:focus {
+            border-color: cyan;
+            box-shadow: 0 0 6px cyan;
+            outline: none;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: #9ac8ff;
+        }
+
+        .admin-panel {
+            margin-top: 2.5rem;
+            border-top: 1px solid rgba(0, 255, 255, 0.3);
+            padding-top: 2rem;
+            display: none;
+        }
+        .admin-panel.show { display: block; }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .table-container { overflow-x: auto; background: rgba(0,0,0,0.4); border-radius: 28px; padding: 0.5rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid rgba(0,255,255,0.2); }
+        th { color: cyan; background: rgba(0,160,255,0.1); }
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ff7b72;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        .export-btn, .clear-btn {
+            background: #1e2a3a;
+            border: 1px solid cyan;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            color: cyan;
+            cursor: pointer;
+        }
+        .clear-btn { border-color: #ff7b72; color: #ff9f8f; }
+        .badge-count {
+            background: cyan;
+            display: inline-block;
+            padding: 0.2rem 0.7rem;
+            border-radius: 30px;
+            color: #010b14;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        footer { text-align: center; padding: 2rem; border-top: 1px solid rgba(0,255,255,0.2); margin-top: 3rem; }
+        @media (max-width: 800px) { .hero h1 { font-size: 2.4rem; } }
+        .tip-text { font-size: 0.75rem; text-align: center; margin-top: 1rem; color: #8bb3ff; }
+    </style>
+</head>
+<body>
+
+<canvas id="particle-canvas"></canvas>
+
+<nav class="navbar">
+    <div class="container nav-container">
+        <div class="logo"><h1>融媒视界 <span style="font-size:0.7rem;">MEDIA FUSION</span></h1></div>
+        <ul class="nav-links">
+            <li><a href="#home">首页</a></li>
+            <li><a href="#experience">融媒经历</a></li>
+            <li><a href="#join">立即报名</a></li>
+        </ul>
+    </div>
+</nav>
+
+<main>
+    <section id="home" class="hero container">
+        <div class="hero-badge"><i class="fas fa-broadcast-tower"></i> 校级官方融媒体 · 虚位以待</div>
+        <h1>下一个爆款，<br>由你定义</h1>
+        <p>融媒体中心是学校最具影响力的内容创作平台，加入我们，积累千万级流量作品经历。</p>
+        <a href="#join" class="btn-primary"><i class="fas fa-pen-fancy"></i> 立即报名 · 成为融媒星</a>
+    </section>
+
+    <section id="experience" class="container">
+        <div class="experience-grid">
+            <div class="exp-card"><div class="exp-icon"><i class="fas fa-video"></i></div><h3>视觉影像部</h3><div class="exp-desc">校园宣传片50w+播放，达芬奇/AE/航拍实战</div></div>
+            <div class="exp-card"><div class="exp-icon"><i class="fas fa-newspaper"></i></div><h3>采编运营部</h3><div class="exp-desc">10w+爆文主笔，公众号涨粉2w+，省级新闻奖</div></div>
+            <div class="exp-card"><div class="exp-icon"><i class="fas fa-podcast"></i></div><h3>融媒体主播部</h3><div class="exp-desc">官方电台/抖音直播15w+观看，专业设备实战</div></div>
+        </div>
+    </section>
+
+    <section id="join" class="container">
+        <div class="form-wrapper">
+            <h2 style="text-align:center; margin-bottom:1rem;">✨ 融媒体新星报名 ✨</h2>
+            <div class="form-area">
+                <form id="recruitForm">
+                    <div class="input-group"><label>姓名</label><input type="text" id="userName" placeholder="例：林青璇" required></div>
+                    <div class="input-group"><label>学号/工号</label><input type="text" id="studentId" placeholder="2024xxxx" required></div>
+                    <div class="input-group"><label>第一志愿部门</label>
+                        <select id="department">
+                            <option value="视觉影像部">视觉影像部 (摄制/后期)</option>
+                            <option value="采编运营部">采编运营部 (文案/编辑)</option>
+                            <option value="融媒体主播部">融媒体主播部 (播音/主持)</option>
+                            <option value="创意设计部">创意设计部 (平面/UI设计)</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label>相关经历/优势</label><input type="text" id="experienceText" placeholder="摄影/写作/运营经历..." required></div>
+                    <button type="submit" class="btn-primary" style="width:100%"><i class="fas fa-paper-plane"></i> 提交报名信息</button>
+                </form>
+            </div>
+
+            <div id="adminEntrance" style="text-align: center; margin-top: 2rem;">
+                <button id="showAdminBtn" class="btn-outline"><i class="fas fa-user-shield"></i> 后台管理入口（仅管理员）</button>
+                <p class="tip-text">输入密码后可查看并导出所有报名数据（云数据库汇总）</p>
+            </div>
+
+            <div id="adminPanel" class="admin-panel">
+                <div class="admin-header">
+                    <div><i class="fas fa-database"></i> 云端报名总表 <span id="adminRowCount" class="badge-count">0</span></div>
+                    <div><button id="exportTableBtn" class="export-btn"><i class="fas fa-download"></i> 导出CSV</button>
+                    <button id="clearAllBtn" class="clear-btn"><i class="fas fa-trash-alt"></i> 清空全部</button>
+                    <button id="lockAdminBtn" class="export-btn"><i class="fas fa-sign-out-alt"></i> 退出后台</button></div>
+                </div>
+                <div class="table-container">
+                    <table id="recruitTable"><thead><tr><th>姓名</th><th>学号/工号</th><th>志愿部门</th><th>相关经历</th><th>操作</th></tr></thead><tbody id="tableBody"><tr><td colspan="5">加载中...</td></tr></tbody></table>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+<footer><p>© 2025 校融媒体中心 | 数据云端存储 · 管理员汇总查看</p></footer>
+
+<script>
+    // ======================== 粒子系统 ========================
+    const canvas = document.getElementById('particle-canvas');
+    let ctx = canvas.getContext('2d');
+    let width = window.innerWidth, height = window.innerHeight;
+    let particles = [];
+    function initParticles() { /* 保留原粒子逻辑，简化 */ }
+    function resizeCanvas() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; initParticles(); }
+    function drawParticles() { /* 略写完整，保证炫酷 */ }
+    // 简便粒子（完整版之前已有，这里恢复完整）
+    function initFullParticles() {
+        for(let i=0;i<180;i++) particles.push({x:Math.random()*width,y:Math.random()*height,radius:Math.random()*2.5+0.8,speedX:(Math.random()-0.5)*0.5,speedY:(Math.random()-0.5)*0.3,color:`hsl(${Math.random()*60+170},80%,60%)`});
+    }
+    function drawFull() {
+        if(!ctx) return;
+        ctx.clearRect(0,0,width,height);
+        for(let p of particles){
+            ctx.beginPath(); ctx.arc(p.x,p.y,p.radius,0,Math.PI*2); ctx.fillStyle=p.color; ctx.fill();
+            p.x+=p.speedX; p.y+=p.speedY;
+            if(p.x<0) p.x=width; if(p.x>width) p.x=0; if(p.y<0) p.y=height; if(p.y>height) p.y=0;
+        }
+        requestAnimationFrame(drawFull);
+    }
+    window.addEventListener('resize',()=>{resizeCanvas(); particles=[]; initFullParticles();});
+    resizeCanvas(); initFullParticles(); drawFull();
+
+    // ======================== Supabase 配置（请替换为您的）================
+    const SUPABASE_URL = 'https://你的项目.supabase.co';      // 替换！
+    const SUPABASE_ANON_KEY = '你的anon公钥';                 // 替换！
+    const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const ADMIN_PASSWORD = 'fusion2025';   // 后台密码
+
+    // 获取所有报名数据
+    async function loadAllRecruits() {
+        const { data, error } = await supabase.from('recruits').select('*').order('created_at', { ascending: false });
+        if(error) { console.error(error); return []; }
+        return data;
+    }
+
+    // 渲染后台表格
+    async function renderAdminTable() {
+        const recruits = await loadAllRecruits();
+        const tbody = document.getElementById('tableBody');
+        const rowCountSpan = document.getElementById('adminRowCount');
+        if(!tbody) return;
+        if(recruits.length === 0){
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">暂无报名数据</td></tr>';
+            rowCountSpan.innerText = '0';
+            return;
+        }
+        let html = '';
+        recruits.forEach((item, idx) => {
+            html += `<tr>
+                        <td>${escapeHtml(item.name)}</td>
+                        <td>${escapeHtml(item.student_id)}</td>
+                        <td>${escapeHtml(item.department)}</td>
+                        <td>${escapeHtml(item.experience)}</td>
+                        <td><button class="delete-btn" data-id="${item.id}"><i class="fas fa-trash-alt"></i></button></td>
+                     </tr>`;
+        });
+        tbody.innerHTML = html;
+        rowCountSpan.innerText = recruits.length;
+        // 绑定删除事件
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = btn.getAttribute('data-id');
+                if(confirm('删除该条报名记录？')) {
+                    await supabase.from('recruits').delete().eq('id', id);
+                    renderAdminTable();
+                }
+            });
+        });
+    }
+
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    // 提交报名
+    document.getElementById('recruitForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('userName').value.trim();
+        const student_id = document.getElementById('studentId').value.trim();
+        const department = document.getElementById('department').value;
+        const experience = document.getElementById('experienceText').value.trim();
+        if(!name || !student_id || !experience) { alert('请完整填写信息'); return; }
+        const { error } = await supabase.from('recruits').insert([{ name, student_id, department, experience }]);
+        if(error) { alert('报名失败，请稍后重试'); console.error(error); }
+        else {
+            alert(`✨ ${name} 报名成功！你的信息已安全存储。`);
+            document.getElementById('recruitForm').reset();
+            // 如果后台面板打开，刷新表格
+            if(document.getElementById('adminPanel').classList.contains('show')) await renderAdminTable();
+        }
+    });
+
+    // 后台管理交互
+    const adminPanelDiv = document.getElementById('adminPanel');
+    const showBtn = document.getElementById('showAdminBtn');
+    const lockBtn = document.getElementById('lockAdminBtn');
+    const exportBtn = document.getElementById('exportTableBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+
+    showBtn.addEventListener('click', () => {
+        const pwd = prompt('请输入管理员密码:');
+        if(pwd === ADMIN_PASSWORD) {
+            adminPanelDiv.classList.add('show');
+            renderAdminTable();
+        } else if(pwd !== null) alert('密码错误，无权限查看后台');
+    });
+    lockBtn.addEventListener('click', () => {
+        adminPanelDiv.classList.remove('show');
+    });
+    exportBtn.addEventListener('click', async () => {
+        const data = await loadAllRecruits();
+        if(data.length === 0) { alert('无数据可导出'); return; }
+        let csvRows = [['姓名','学号/工号','志愿部门','相关经历','报名时间']];
+        data.forEach(r => { csvRows.push([r.name, r.student_id, r.department, r.experience, r.created_at]); });
+        const csvContent = csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob(["\uFEFF" + csvContent], {type: 'text/csv;charset=utf-8;'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '融媒体招新报名表.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    });
+    clearAllBtn.addEventListener('click', async () => {
+        if(confirm('⚠️ 永久清空所有报名数据，不可恢复！确定吗？')) {
+            await supabase.from('recruits').delete().neq('id', 0);
+            renderAdminTable();
+        }
+    });
+    // 平滑导航
+    document.querySelectorAll('.nav-links a, .btn-primary[href="#join"]').forEach(a => {
+        a.addEventListener('click', function(e){
+            const hash = this.getAttribute('href');
+            if(hash && hash.startsWith('#')){
+                e.preventDefault();
+                document.querySelector(hash).scrollIntoView({behavior:'smooth'});
+            }
+        });
+    });
+</script>
+</body>
+</html>
